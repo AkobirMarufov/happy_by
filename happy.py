@@ -13,14 +13,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import CommandStart
 
-import os
-from dotenv import load_dotenv
-load_dotenv(".env")
 
-API_TOKEN = os.getenv("API_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
+API_TOKEN = '7288315068:AAHRG9800i8w6lXIdwlSFcF9YfYJQwo-Qlg'
+ADMIN_ID = 7009085528
+CHANNEL_ID = -1002510944161
+CHANNEL_USERNAME = '@tugilgankun_tabrikg'
 
 logging.basicConfig(level=logging.INFO)
 
