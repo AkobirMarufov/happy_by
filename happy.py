@@ -109,8 +109,8 @@ async def wedding_from(message: Message, state: FSMContext):
     await message.answer(
         "🎁 Taklifnoma turini tanlang:",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🎬 Video", callback_data="wedding_video")],
-            [InlineKeyboardButton(text="🖼 Rasm", callback_data="wedding_image")]
+            [InlineKeyboardButton(text="🎬 Video (60 000)", callback_data="wedding_video")],
+            [InlineKeyboardButton(text="🖼 Rasm (45 000)", callback_data="wedding_image")]
         ])
     )
 
