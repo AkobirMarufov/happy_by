@@ -63,15 +63,36 @@ admin_requests = {}
 
 @router.message(CommandStart())
 async def start_handler(message: Message):
+    user_id = message.from_user.id
+    if await is_subscribed(user_id):
+        await message.answer("Xush kelibsiz! Iltimos, buyurtma turini tanlang:", reply_markup=main_menu)
+    else:
+        await ask_to_subscribe(message)
+
+
+async def ask_to_subscribe(message: Message):
+    check_btn = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Obuna bo‘lish", url=f"https://t.me/{CHANNEL_USERNAME.strip('@')}")],
+        [InlineKeyboardButton(text="♻️ Tekshirish", callback_data="check_subscription")]
+    ])
+    await message.answer("📢 Botdan foydalanish uchun kanalga obuna bo‘ling!", reply_markup=check_btn)
+
+
+async def is_subscribed(user_id: int) -> bool:
     try:
-        member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)
-        if member.status not in ["member", "administrator", "creator"]:
-            raise Exception("Not a member")
+        member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+        return member.status in ("member", "administrator", "creator")
     except:
-        join_btn = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Obuna bo‘lish", url=f"https://t.me/{CHANNEL_USERNAME.strip('@')}")]])
-        await message.answer("📢 Botdan foydalanish uchun kanalga obuna bo‘ling!", reply_markup=join_btn)
-        return
-    await message.answer("Xush kelibsiz! Iltimos, buyurtma turini tanlang:", reply_markup=main_menu)
+        return False
+
+
+@router.callback_query(F.data == "check_subscription")
+async def check_subscription(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    if await is_subscribed(user_id):
+        await callback.message.edit_text("✅ Obuna tasdiqlandi. Buyurtma turini tanlang:", reply_markup=main_menu)
+    else:
+        await callback.answer("❌ Siz hali ham obuna bo‘lmagansiz.", show_alert=True)
 
 @router.message(F.text == "💍 To‘yga taklifnoma")
 async def wedding_start(message: Message, state: FSMContext):
@@ -155,12 +176,23 @@ async def approve_order(callback: CallbackQuery):
         await callback.answer("❌ Maʼlumot topilmadi.")
         return
     try:
+        # Buyurtmachiga xabar yuboriladi
         await bot.send_message(chat_id=buyer_id, text="✅ Buyurtma tasdiqlandi\n\n" + data['caption'])
+
+        # Kanalga caption yuboriladi
         await bot.send_message(chat_id=CHANNEL_ID, text=data['caption'])
-        await callback.answer("Tasdiqlandi.")
+
+        # Rasmlar bor bo‘lsa, barchasini ADMINga yuborish
+        if data.get("photos"):
+            await callback.message.answer(f"📤 {len(data['photos'])} ta rasm yuborilmoqda admin uchun...")
+            for idx, photo_id in enumerate(data["photos"], start=1):
+                await bot.send_photo(chat_id=ADMIN_ID, photo=photo_id, caption=f"📸 {idx}-rasm")
+
+        await callback.answer("✅ Tasdiqlandi.")
         del admin_requests[buyer_id]
     except Exception as e:
-        await callback.answer(f"Xatolik: {e}")
+        await callback.answer(f"❌ Xatolik: {e}")
+
 
 @router.message(F.text == "🎉 Tug'ilgan kun tabriknomasi")
 async def birthday_start(message: Message, state: FSMContext):
